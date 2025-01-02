@@ -1,4 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { UsersService } from './users.service';
 
 @Controller('users')
 export class UsersController {
@@ -10,35 +11,39 @@ export class UsersController {
       DELETE /users/:id
       */
 
-    @Get() // GET /users
-    findAll(@Query('role') role?: 'ADMIN' | 'USER', @Query('limit') limit = 100) {
-        return {role, limit}; // 'This action returns all users';
-    }
+    constructor(private readonly usersService: UsersService) { }
 
+    @Get() // GET /users
+    findAll(@Query('role') role?: 'ADMIN' | 'USER', @Query('limit') limit?: number) {
+        return this.usersService.findAll(role, +limit);
+    }
 
     @Get(':id') // /get users/:id
     findOne(@Param('id') id: number) {
-
-        if(typeof(id) === 'string') {
-            return `This action is not allowed`;
-        }
-
-        return { id }; // `This action returns a #${id} user`;
+  
+        return this.usersService.findOne(id); 
     }
 
     @Post() // POST /users
-    create(@Body() user: {}) {
-        return user // 'This action adds a new user';
+    create(@Body() user: { id: number, name: string, role: 'ADMIN' | 'USER' }) {
+        return this.usersService.create(user); 
     }
 
-    @Patch(':id') // /get users/:id
-    update(@Param('id') id: number, @Body() userUpdate: {}) {
-        return { id, ...userUpdate }; // `This action returns a #${id} user`;
+    @Patch(':id')
+    update(
+      @Param('id') id: string, // Receive as string
+      @Body() userUpdate: { id?: number; name?: string; role?: 'ADMIN' | 'USER' }
+    ) {
+      const numericId = Number(id); // Convert to number
+      return this.usersService.update(numericId, userUpdate);
     }
+    
 
 
-    @Delete(':id') // /get users/:id
-    remove(@Param('id') id: number) {
-        return { id }; // `This action removes a #${id} user`;
+    @Delete(':id')
+    remove(@Param('id') id: string) {
+      const numericId = Number(id); // Convert to number
+      return this.usersService.remove(numericId);
     }
+    
 }
