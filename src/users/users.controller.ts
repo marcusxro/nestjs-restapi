@@ -1,5 +1,7 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, ParseIntPipe } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, ParseIntPipe, ValidationPipe} from '@nestjs/common';
 import { UsersService } from './users.service';
+import { CreateUserDto } from './dto/create-user-dto';
+import { UpdateUserDto } from './dto/update-user-dto';
 
 @Controller('users')
 export class UsersController {
@@ -20,30 +22,30 @@ export class UsersController {
 
     @Get(':id') // /get users/:id
     findOne(@Param('id', ParseIntPipe) id: number) {
-  
-        return this.usersService.findOne(id); 
+
+        return this.usersService.findOne(id);
     }
 
     @Post() // POST /users
-    create(@Body() user: { id: number, name: string, role: 'ADMIN' | 'USER' }) {
-        return this.usersService.create(user); 
+    create(@Body(ValidationPipe) user: CreateUserDto) {
+        return this.usersService.create(user);
     }
 
     @Patch(':id')
     update(
-      @Param('id', ParseIntPipe) id: string, // Receive as string
-      @Body() userUpdate: { id?: number; name?: string; role?: 'ADMIN' | 'USER' }
+        @Param('id', ParseIntPipe) id: string, // Receive as string
+        @Body(ValidationPipe) userUpdate: UpdateUserDto
     ) {
-      const numericId = Number(id); // Convert to number
-      return this.usersService.update(numericId, userUpdate);
+        const numericId = Number(id); // Convert to number
+        return this.usersService.update(numericId, userUpdate);
     }
-    
+
 
 
     @Delete(':id')
     remove(@Param('id', ParseIntPipe) id: string) {
-      const numericId = Number(id); // Convert to number
-      return this.usersService.remove(numericId);
+        const numericId = Number(id); // Convert to number
+        return this.usersService.remove(numericId);
     }
-    
+
 }

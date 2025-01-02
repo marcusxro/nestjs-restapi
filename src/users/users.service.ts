@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { parse } from 'path';
+import { CreateUserDto } from './dto/create-user-dto';
+import { UpdateUserDto } from './dto/update-user-dto';
 
 @Injectable()
 export class UsersService {
@@ -56,29 +57,30 @@ export class UsersService {
         return foundUser
     }
 
-    create(user: { id: number, name: string, role: 'ADMIN' | 'USER'}) {
-
-        if(!user.name) {
+    create(user: CreateUserDto) {
+        if (!user.name) {
             return 'Invalid name';
         }
-        if(!user.role) {
+        if (!user.role) {
             return 'Invalid role';
         }
-
+    
         const isAlreadyExist = this.users.find(u => u.name === user.name);
-
-        if(isAlreadyExist) {
+        if (isAlreadyExist) {
             return 'User already exists';
         }
-
-        const userID = this.users[this.users.length - 1].id + 1; // Generate a new ID
-        user.id = userID;
-        this.users.push(user);
-        return user;
+    
+        const newUser = {
+            id: this.users.length > 0 ? this.users[this.users.length - 1].id + 1 : 1, // Auto-generate ID
+            ...user, // Copy other properties from CreateUserDto
+        };
+    
+        this.users.push(newUser);
+        return newUser;
     }
+    
 
-
-    update(id: number, userUpdate: { id?: number; name?: string; role?: 'ADMIN' | 'USER' }) {
+    update(id: number, userUpdate: UpdateUserDto) {
         const index = this.users.findIndex(user => user.id === id);
         if (index === -1) {
           throw new Error(`User with id ${id} not found`);
