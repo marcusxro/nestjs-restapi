@@ -7,6 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { LoggerModule } from './logger/logger.module';
 
 
 @Module({
@@ -42,6 +43,7 @@ import { APP_GUARD } from '@nestjs/core';
       limit: 3, // requests per ttl
     }
   ]),
+    LoggerModule,
   ],
   controllers: [AppController],
   providers: [

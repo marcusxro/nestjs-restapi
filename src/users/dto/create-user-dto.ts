@@ -1,6 +1,5 @@
-import { IsString, IsInt, IsEnum, IsNotEmpty } from "class-validator"; //class-validator class-transformer
-
-
+import { IsString
+    , IsEnum, IsNotEmpty } from "class-validator"; //class-validator class-transformer
 
 export class CreateUserDto {
     @IsString()
@@ -9,6 +8,7 @@ export class CreateUserDto {
     @IsEnum(['ADMIN', 'USER'], {
         message: 'Valid roles are ADMIN or USER'
     })
+    @IsString()
     @IsNotEmpty()
     role: 'ADMIN' | 'USER';
 
