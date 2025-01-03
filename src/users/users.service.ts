@@ -11,16 +11,17 @@ export class UsersService {
 
   constructor(
     @InjectRepository(UserEntity)
-     private userRepository: Repository<UserEntity>,  // Inject the repository
-  ) {}
+    private userRepository: Repository<UserEntity>,  // Inject the repository
+  ) { }
+
+  async findAll(role?: "ADMIN" | "USER", limit?: number) {
+    let query = this.userRepository.createQueryBuilder('user');
 
 
-  async findAll(role?: "ADMIN" | "USER", limit?: number | string) {
-    let query = this.userRepository.createQueryBuilder('user');  
-
+    console.log(limit)
+    
     if (limit) {
       const parsedLimit = parseInt(limit.toString(), 10);
-
       if (isNaN(parsedLimit)) {
         console.log('Invalid limit:', limit);
         throw new BadRequestException('Limit must be a valid number');
@@ -34,21 +35,16 @@ export class UsersService {
       if (role !== 'ADMIN' && role !== 'USER') {
         throw new NotFoundException('Invalid role');
       }
-
       query.andWhere('user.role = :role', { role });
     }
-
-    const users = await query.getMany(); 
-
+    const users = await query.getMany();
     return users;
   }
 
   async findOne(id: number) {
     console.log('finding user with id:', id);
     const foundUser = await this.userRepository.findOne({ where: { id: id } });
-
     if (!foundUser) throw new NotFoundException(`User with id ${id} not found`);
-
     return foundUser
   }
 
@@ -65,7 +61,6 @@ export class UsersService {
     }
     const newUser = this.userRepository.create(createUserDto);
     await this.userRepository.save(newUser);
-
     return { message: "User created successfully", user: newUser };
   }
 
@@ -75,24 +70,20 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
-
     const updatedUser = Object.assign(user, userUpdateDto);
-
     await this.userRepository.save(updatedUser);
     console.log('Updated user:', updatedUser);
-
     return { message: "User updated successfully", user: updatedUser };
   }
 
-
   async remove(id: number) {
     const foundUser = this.userRepository.findOne({ where: { id } });
-    if(!foundUser) {
+    if (!foundUser) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
-    if(foundUser) {
+    if (foundUser) {
       const deletedUser = await this.userRepository.delete(id);
-      if(deletedUser.affected === 0) {
+      if (deletedUser.affected === 0) {
         throw new NotFoundException(`User with id ${id} not found`);
       }
       return {
@@ -102,6 +93,4 @@ export class UsersService {
     }
     return foundUser;
   }
-
-
 }
