@@ -1,8 +1,12 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, ParseIntPipe, ValidationPipe} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, ParseIntPipe, ValidationPipe } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user-dto';
 import { UpdateUserDto } from './dto/update-user-dto';
+import { SkipThrottle, Throttle } from '@nestjs/throttler';
 
+
+
+@SkipThrottle()
 @Controller('users')
 export class UsersController {
     /*
@@ -15,17 +19,21 @@ export class UsersController {
 
     constructor(private readonly usersService: UsersService) { }
 
+
+    @SkipThrottle({ default: false })
     @Get() // GET /users
     findAll(@Query('role') role?: 'ADMIN' | 'USER', @Query('limit') limit?: number | string) {
         return this.usersService.findAll(role, +limit);
     }
 
+    @Throttle({short: {ttl: 50000, limit: 3}})
     @Get(':id') // /get users/:id
     findOne(@Param('id', ParseIntPipe) id: number) {
 
         return this.usersService.findOne(id);
     }
 
+    @Throttle({short: {ttl: 50000, limit: 3}})
     @Post() // POST /users
     create(@Body(ValidationPipe) user: CreateUserDto) {
         return this.usersService.create(user);
@@ -40,8 +48,7 @@ export class UsersController {
         return this.usersService.update(numericId, userUpdate);
     }
 
-
-
+    @Throttle({short: {ttl: 50000, limit: 3}})
     @Delete(':id')
     remove(@Param('id', ParseIntPipe) id: string) {
         const numericId = Number(id); // Convert to number

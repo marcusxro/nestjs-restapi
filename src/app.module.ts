@@ -5,6 +5,8 @@ import { UsersModule } from './users/users.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 
 @Module({
@@ -29,8 +31,25 @@ import { join } from 'path';
       }),
       
     }),
+    ThrottlerModule.forRoot([{
+      name: 'long',
+      ttl: 60000,
+      limit: 100, // requests per ttl
+    },
+    {
+      name: 'short',
+      ttl: 1000,
+      limit: 3, // requests per ttl
+    }
+  ]),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule { }
