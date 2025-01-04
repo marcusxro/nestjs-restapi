@@ -1,10 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user-dto';
 import { UpdateUserDto } from './dto/update-user-dto';
-import { NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  NotFoundException, BadRequestException
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserEntity } from './entities/user.entity';
+import { stat } from 'fs';
 
 @Injectable()
 export class UsersService {
@@ -14,21 +17,34 @@ export class UsersService {
     private userRepository: Repository<UserEntity>,  // Inject the repository
   ) { }
 
-  async findAll(role?: "ADMIN" | "USER", limit?: number) {
+
+  async findAll(
+    role?: "ADMIN" | "USER",
+    limit?: "all" | string
+  ) {
+
     let query = this.userRepository.createQueryBuilder('user');
 
-
-    console.log(limit)
-    
     if (limit) {
-      const parsedLimit = parseInt(limit.toString(), 10);
-      if (isNaN(parsedLimit)) {
-        console.log('Invalid limit:', limit);
-        throw new BadRequestException('Limit must be a valid number');
+      if (limit === 'all') {
+        console.log("LIMIT IS ALL");
+        // Fetch all users without applying a limit
+      } else {
+        const parsedLimit = parseInt(limit, 10);
+
+        if (isNaN(parsedLimit) || limit !== parsedLimit.toString()) {
+          console.log('Invalid limit:', limit);
+          throw new BadRequestException('Limit must be a valid number or "all"');
+        }
+
+        if (parsedLimit > await this.userRepository.count()) {
+          throw new BadRequestException('Limit must be less than the total number of users');
+        }
+
+        query.take(parsedLimit);
       }
-      query.take(parsedLimit);
     } else {
-      console.log('No limit provided, returning all users');
+      console.log("NO LIMIT");
     }
 
     if (role) {
@@ -38,10 +54,23 @@ export class UsersService {
       query.andWhere('user.role = :role', { role });
     }
     const users = await query.getMany();
-    return users;
+
+
+    const finalized = {
+      size: users.length,
+      status: "success",
+      users: users
+    }
+
+    return finalized;
   }
 
-  async findOne(id: number) {
+
+
+
+  async findOne(
+    id: number
+  ) {
     console.log('finding user with id:', id);
     const foundUser = await this.userRepository.findOne({ where: { id: id } });
     if (!foundUser) throw new NotFoundException(`User with id ${id} not found`);
@@ -65,7 +94,10 @@ export class UsersService {
   }
 
 
-  async update(id: number, userUpdateDto: UpdateUserDto) {
+  async update(
+    id: number,
+    userUpdateDto: UpdateUserDto
+  ) {
     const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {
       throw new NotFoundException(`User with id ${id} not found`);
@@ -76,7 +108,10 @@ export class UsersService {
     return { message: "User updated successfully", user: updatedUser };
   }
 
-  async remove(id: number) {
+
+  async remove(
+    id: number
+  ) {
     const foundUser = this.userRepository.findOne({ where: { id } });
     if (!foundUser) {
       throw new NotFoundException(`User with id ${id} not found`);

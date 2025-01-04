@@ -16,8 +16,6 @@ import { LoggerService } from 'src/logger/logger.service';
 @SkipThrottle()
 @Controller('users')
 export class UsersController {
-
-
     constructor(private readonly usersService: UsersService) { }
     private readonly logger = new LoggerService(UsersController.name);//added logger service
 
@@ -27,10 +25,10 @@ export class UsersController {
     findAll(
         @Ip() ip: string, // Get the IP address of the client
         @Query('role') role?: 'ADMIN' | 'USER',
-        @Query('limit') limit?: number | string
+        @Query('limit')   limit?: "all" | string
     ) {
         this.logger.log(`==================================== /T (findAll) Request from IP: ${ip}`);
-        return this.usersService.findAll(role, +limit);
+        return this.usersService.findAll(role, limit);
     }
 
     // /get users/:id
